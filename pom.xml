@@ -342,12 +342,13 @@
         <executions>
           <execution>
             <goals>
-              <goal>info-path</goal>
+              <goal>build-kpar</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
-          <infoPath>${project.basedir}</infoPath>
+          <workspacePath>${project.basedir}/sysml.library</workspacePath>
+          <outputPath>${project.basedir}/sysml.library/output</outputPath>
         </configuration>
       </plugin>
     </plugins>
