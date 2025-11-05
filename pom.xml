@@ -347,8 +347,8 @@
           </execution>
         </executions>
         <configuration>
-          <workspacePath>${project.basedir}/sysml.library</workspacePath>
-          <outputPath>${project.basedir}/sysml.library/output</outputPath>
+          <workspacePath>${maven.multiModuleProjectDirectory}/sysml.library</workspacePath>
+          <outputPath>${maven.multiModuleProjectDirectory}/sysml.library/output</outputPath>
         </configuration>
       </plugin>
     </plugins>
