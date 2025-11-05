@@ -1,0 +1,22 @@
+{
+    "projects": [
+        {
+            "path": "Domain Libraries/Analysis",
+            "iris": [
+                "urn:kpar:SysML-Analysis-Library"
+            ]
+        },
+        {
+            "path": "Domain Libraries/Cause and Effect",
+            "iris": [
+                "urn:kpar:SysML-Cause-and-Effect-Library"
+            ]
+        },
+        {
+            "path": "Domain Libraries/Geometry",
+            "iris": [
+                "urn:kpar:SysML-Geometry-Library"
+            ]
+        }
+    ]
+}
