@@ -79,5 +79,4 @@ jobs:
           files: |
             artifacts/*
           overwrite_files: false
-          name: Release Test 01
-          # name: Release ${{ github.event.inputs.tag_name }}
+          name: Release ${{ github.event.inputs.tag_name }}
