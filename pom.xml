@@ -28,48 +28,15 @@
     <junit.version>3.5.3</junit.version>
     <asciidoctor.maven.plugin.version>3.2.0</asciidoctor.maven.plugin.version>
     <asciidoctorj.pdf.version>2.3.19</asciidoctorj.pdf.version>
-    <sysand-maven-plugin.version>0.0.4-SNAPSHOT</sysand-maven-plugin.version>
+    <sysand-maven-plugin.version>0.0.5</sysand-maven-plugin.version>
   </properties>
-  <repositories>
-    <repository>
-        <name>Central Portal Snapshots</name>
-        <id>central-portal-snapshots</id>
-        <url>https://central.sonatype.com/repository/maven-snapshots/</url>
-        <releases>
-            <enabled>false</enabled>
-        </releases>
-        <snapshots>
-          <enabled>true</enabled>
-        </snapshots>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-        <name>Central Portal Snapshots</name>
-        <id>central-portal-snapshots</id>
-        <url>https://central.sonatype.com/repository/maven-snapshots/</url>
-        <releases>
-            <enabled>false</enabled>
-        </releases>
-        <snapshots>
-          <enabled>true</enabled>
-        </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
   <dependencies>
-
-    <dependency>
-      <groupId>com.sensmetry</groupId>
-      <artifactId>sysand</artifactId>
-      <version>0.0.4-SNAPSHOT</version>
-    </dependency>
     <dependency>
       <groupId>com.sensmetry</groupId>
       <artifactId>sysand-maven-plugin</artifactId>
-      <version>0.0.4-SNAPSHOT</version>
+      <version>${sysand-maven-plugin.version}</version>
     </dependency>
-
-    </dependencies>
+  </dependencies>
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.omg.sysml</groupId>
