@@ -25,12 +25,14 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
-    - name: Remove -snapshot from version
-      run: ./mvnw -B versions:set -DremoveSnapshot=true
-    - name: Publish to Github Packages
-      run: ./mvnw -B deploy -DskipTests=true
-      env:
-        GITHUB_TOKEN: ${{ github.token }} # GITHUB_TOKEN is the default env for the password
+    - name: Build with Maven
+      run: ./mvnw -B clean verify --file pom.xml
+    # - name: Remove -snapshot from version
+    #   run: ./mvnw -B versions:set -DremoveSnapshot=true
+    # - name: Publish to Github Packages
+    #   run: ./mvnw -B deploy -DskipTests=true
+    #   env:
+    #     GITHUB_TOKEN: ${{ github.token }} # GITHUB_TOKEN is the default env for the password
     - name: Upload SysML Library .kpar files
       uses: actions/upload-artifact@v5
       with:
