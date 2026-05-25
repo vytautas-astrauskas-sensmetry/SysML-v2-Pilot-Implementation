@@ -1,21 +1,20 @@
 /*******************************************************************************
  * SysML 2 Pilot Implementation
- * Copyright (c) 2021-2022 Model Driven Solutions, Inc.
+ * Copyright (c) 2021-2022, 2026 Model Driven Solutions, Inc.
  *    
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the Eclipse Public License as published by
+ * the Eclipse Foundation, version 2 of the License.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Eclipse Public License for more details.
  *  
- * You should have received a copy of theGNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of theEclipse Public License
+ * along with this program.  If not, see <https://www.eclipse.org/legal/epl-2.0/>.
  *  
- * @license LGPL-3.0-or-later <http://spdx.org/licenses/LGPL-3.0-or-later>
+ * @license EPL-2.0 <http://spdx.org/licenses/EPL-2.0>
  *  
  *******************************************************************************/
 
@@ -27,6 +26,7 @@ import org.eclipse.emf.common.util.EList;
 import org.omg.sysml.lang.sysml.Element;
 import org.omg.sysml.lang.sysml.Feature;
 import org.omg.sysml.lang.sysml.FlowEnd;
+import org.omg.sysml.lang.sysml.Redefinition;
 import org.omg.sysml.lang.sysml.SysMLPackage;
 import org.omg.sysml.util.FeatureUtil;
 import org.omg.sysml.util.ImplicitGeneralizationMap;
@@ -42,12 +42,12 @@ public class FlowEndAdapter extends FeatureAdapter {
 	public FlowEnd getTarget() {
 		return (FlowEnd)super.getTarget();
 	}
-	
+		
 	// Implicit Generalization
 	
 	@Override
 	public Stream<Feature> getSubsettedNotRedefinedFeatures() {
-		addItemFlowEndSubsetting();
+		addFlowEndSubsetting();
 		return super.getSubsettedNotRedefinedFeatures();
 	}
 	
@@ -59,12 +59,32 @@ public class FlowEndAdapter extends FeatureAdapter {
 		
 	// Transformation
 	
-	public void addItemFlowEndSubsetting() {
+	/**
+	 * @satisfies validateRedefinitionDirectionConformance 
+	 * (For the case of a FlowEnd feature.)
+	 */
+	public void addFlowFeatureDirection() {
+		FlowEnd target = getTarget();
+		EList<Feature> ownedFeatures = target.getOwnedFeature();
+		if (!ownedFeatures.isEmpty()) {
+			Feature flowFeature = ownedFeatures.get(0);
+			EList<Redefinition> redefinitions = flowFeature.getOwnedRedefinition();
+			if (!redefinitions.isEmpty()) {
+				// Note: This cannot be done during parse post-processing because it may require proxy resolution.
+				Feature redefinedFeature = redefinitions.get(0).getRedefinedFeature();
+				if (redefinedFeature != null) {
+					flowFeature.setDirection(target.directionOf(redefinedFeature));
+				}
+			}
+		}		
+	}
+	
+	public void addFlowEndSubsetting() {
 		FlowEnd target = getTarget();
 		if (target.getOwnedSubsetting().isEmpty()) {
-			EList<Feature> features = getTarget().getOwnedFeature();
-			if (!features.isEmpty()) {
-				FeatureUtil.getRedefinedFeaturesOf(features.get(0)).stream().findFirst().
+			EList<Feature> ownedFeatures = getTarget().getOwnedFeature();
+			if (!ownedFeatures.isEmpty()) {
+				FeatureUtil.getRedefinedFeaturesOf(ownedFeatures.get(0)).stream().findFirst().
 					filter(f->f != null).
 					map(Feature::getOwningType).
 					filter(Feature.class::isInstance).
@@ -78,20 +98,20 @@ public class FlowEndAdapter extends FeatureAdapter {
 	/**
 	 * @satisfies checkFeatureFlowFeatureRedefinition
 	 */
-	public void addItemFlowFeatureRedefinition() {
+	public void addFlowFeatureRedefinition() {
 		FlowEnd target = getTarget();
 		Element owner = target.getOwner();
 		if (owner instanceof Feature) {
 			EList<Feature> ownedFeatures = target.getOwnedFeature();
 			if (!ownedFeatures.isEmpty()) {
-				Feature itemFlowFeature = ownedFeatures.get(0);
-			int i = ((Feature)owner).getEndFeature().indexOf(target);
-			if (i == 0 || i == 1) {
-					TypeUtil.addImplicitGeneralTypeTo(itemFlowFeature, 
+				Feature flowFeature = ownedFeatures.get(0);
+				int i = ((Feature)owner).getEndFeature().indexOf(target);
+				if (i == 0 || i == 1) {
+					TypeUtil.addImplicitGeneralTypeTo(flowFeature, 
 							SysMLPackage.eINSTANCE.getRedefinition(),
 							getLibraryType(ImplicitGeneralizationMap.getDefaultSupertypeFor(
 									target.getClass(), i == 0? "sourceOutput": "targetInput")));
-					TypeUtil.setIsAddImplicitGeneralTypesFor(itemFlowFeature, false);
+					TypeUtil.setIsAddImplicitGeneralTypesFor(flowFeature, false);
 				}
 			}
 		}
@@ -99,8 +119,9 @@ public class FlowEndAdapter extends FeatureAdapter {
 
 	@Override
 	public void doTransform() {
-		addItemFlowEndSubsetting();
-		addItemFlowFeatureRedefinition();
+		addFlowEndSubsetting();
+		addFlowFeatureRedefinition();
+		addFlowFeatureDirection();
 		super.doTransform();
 	}
 	

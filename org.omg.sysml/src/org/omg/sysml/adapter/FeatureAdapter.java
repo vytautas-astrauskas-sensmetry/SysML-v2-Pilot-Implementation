@@ -1,21 +1,20 @@
 /*******************************************************************************
  * SysML 2 Pilot Implementation
- * Copyright (c) 2021-2025 Model Driven Solutions, Inc.
+ * Copyright (c) 2021-2026 Model Driven Solutions, Inc.
  *    
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the Eclipse Public License as published by
+ * the Eclipse Foundation, version 2 of the License.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Eclipse Public License for more details.
  *  
- * You should have received a copy of theGNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of theEclipse Public License
+ * along with this program.  If not, see <https://www.eclipse.org/legal/epl-2.0/>.
  *  
- * @license LGPL-3.0-or-later <http://spdx.org/licenses/LGPL-3.0-or-later>
+ * @license EPL-2.0 <http://spdx.org/licenses/EPL-2.0>
  *  
  *******************************************************************************/
 
@@ -35,6 +34,7 @@ import java.util.stream.Stream;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.InternalEObject;
+import org.omg.sysml.lang.sysml.AssignmentActionUsage;
 import org.omg.sysml.lang.sysml.Association;
 import org.omg.sysml.lang.sysml.BindingConnector;
 import org.omg.sysml.lang.sysml.Connector;
@@ -57,7 +57,6 @@ import org.omg.sysml.lang.sysml.SysMLPackage;
 import org.omg.sysml.lang.sysml.Type;
 import org.omg.sysml.lang.sysml.TypeFeaturing;
 import org.omg.sysml.lang.sysml.VisibilityKind;
-import org.omg.sysml.lang.sysml.impl.RedefinitionImpl;
 import org.omg.sysml.util.ConnectorUtil;
 import org.omg.sysml.util.ElementUtil;
 import org.omg.sysml.util.ExpressionUtil;
@@ -217,7 +216,6 @@ public class FeatureAdapter extends TypeAdapter {
 	 * @satisfies checkFeatureCrossingSpecialization
 	 * @satisfies checkFeatureOwnedCrossFeatureSpecialization
 	 * @satisfies checkFeatureOwnedCrossFeatureRedefinitionSpecialization
-	 * 
 	 */
 	@Override
 	public void addDefaultGeneralType() {
@@ -302,7 +300,7 @@ public class FeatureAdapter extends TypeAdapter {
 				addImplicitGeneralType(SysMLPackage.eINSTANCE.getFeatureTyping(), type);
 			}
 			
-			for (Feature redefinedFeature: FeatureUtil.getRedefinedFeaturesWithComputedOf((Feature)owner, null)) {
+			for (Feature redefinedFeature: FeatureUtil.getRedefinedFeaturesWithComputedOf((Feature)owner)) {
 				if (redefinedFeature.isEnd()) {
 					Feature crossFeature = getCrossFeatureOf(redefinedFeature);
 					if (crossFeature != null) {
@@ -500,7 +498,7 @@ public class FeatureAdapter extends TypeAdapter {
 	
 	public void addAllRedefinedFeaturesTo(Set<Feature> redefinedFeatures) {
 		redefinedFeatures.add(getTarget());
-		getRedefinedFeaturesWithComputed(null).stream().forEach(redefinedFeature->{
+		getRedefinedFeaturesWithComputed().stream().forEach(redefinedFeature->{
 			if (redefinedFeature != null && !redefinedFeatures.contains(redefinedFeature)) {
 				FeatureUtil.addAllRedefinedFeaturesTo(redefinedFeature, redefinedFeatures);
 			}
@@ -509,15 +507,15 @@ public class FeatureAdapter extends TypeAdapter {
 	
 	// Computed Redefinition
 	
-	public List<Feature> getRedefinedFeaturesWithComputed(Element skip) {
+	public List<Feature> getRedefinedFeaturesWithComputed() {
 		Feature target = getTarget();
 		
-		addComputedRedefinitions(skip);
+		addComputedRedefinitions(null);
 		EList<Redefinition> redefinitions = target.getOwnedRedefinition();
 		
 		List<Feature> redefinedFeatures = new ArrayList<>();
 		redefinitions.stream().
-			map(r->r == skip? ((RedefinitionImpl)r).basicGetRedefinedFeature(): r.getRedefinedFeature()).
+			map(Redefinition::getRedefinedFeature).
 			filter(f->f != null).
 			forEachOrdered(redefinedFeatures::add);
 		
@@ -593,8 +591,45 @@ public class FeatureAdapter extends TypeAdapter {
 			// NOTE: Set flag before adding redefinitions, to avoid possible infinite
 			// recursion if computeImplicitGeneralTypes is called again on this Feature.
 			isComputeRedefinitions = false;
+			addFeatureWriteTypes();
 			addRedefinitions(skip);
 		}
+	}
+	
+	/**
+	 * @satisfies checkAssignmentActionUsageReferentRedefinition
+	 * @satisfies checkAssignmentActionUsageAccessedFeatureRedefinition
+	 * @satisfies checkAssignmentActionUsageStartingAtRedefinition
+	 */
+	protected void addFeatureWriteTypes() {
+		Feature feature = getTarget();
+		if (isStartingAtFeature(feature)) {
+			addDefaultGeneralType(SysMLPackage.eINSTANCE.getRedefinition(), getDefaultSupertype("startingAt"));
+		} else if (isAccessedFeature(feature)) {
+			addDefaultGeneralType(SysMLPackage.eINSTANCE.getRedefinition(), getDefaultSupertype("accessedFeature"));
+			AssignmentActionUsage actionUsage = (AssignmentActionUsage)(feature.getOwner().getOwner().getOwner());
+			Feature referent = actionUsage.getReferent();
+			if (referent != null) {
+				addImplicitGeneralType(SysMLPackage.eINSTANCE.getRedefinition(), referent);
+			}
+		}
+	}
+	
+	public static boolean isStartingAtFeature(Feature feature) {
+		Type owningType = feature.getOwningType();
+		if (owningType instanceof Feature) {
+			Type actionUsage = ((Feature)owningType).getOwningType();
+			if (actionUsage instanceof AssignmentActionUsage) {
+				 return ((AssignmentActionUsage)actionUsage).getParameter().indexOf(owningType) == 0;
+			}
+		}
+		return false;
+	}
+	
+	public static boolean isAccessedFeature(Feature feature) {
+		Type owningType = feature.getOwningType();
+		return owningType instanceof Feature && isStartingAtFeature((Feature)owningType) &&
+			   owningType.getOwnedFeature().indexOf(feature) == 0;
 	}
 	
 	/**
@@ -790,27 +825,6 @@ public class FeatureAdapter extends TypeAdapter {
 		return connector;
 	}
 	
-	protected void addFeatureWriteTypes(List<Feature> parameters, Feature referent) {
-		if (!parameters.isEmpty()) {
-			Feature targetFeature = parameters.get(0);
-			List<Feature> features = targetFeature.getOwnedFeature();
-			if (!features.isEmpty()) {
-				Feature startingAtFeature = features.get(0);
-				TypeUtil.addDefaultGeneralTypeTo(startingAtFeature, SysMLPackage.eINSTANCE.getRedefinition(), getDefaultSupertype("startingAt"));
-				TypeUtil.setIsAddImplicitGeneralTypesFor(startingAtFeature, false);
-				features = startingAtFeature.getOwnedFeature();
-				if (!features.isEmpty()) {
-					Feature accessedFeature = features.get(0);
-					TypeUtil.addDefaultGeneralTypeTo(accessedFeature, SysMLPackage.eINSTANCE.getRedefinition(), getDefaultSupertype("accessedFeature"));
-					if (referent != null) {
-						TypeUtil.addImplicitGeneralTypeTo(accessedFeature, SysMLPackage.eINSTANCE.getRedefinition(), referent);
-					}
-					TypeUtil.setIsAddImplicitGeneralTypesFor(accessedFeature, false);
-				}
-			}
-		}
-	}
-	
 	/**
 	 * @satisfies checkFeatureValueBindingConnector
 	 */
@@ -823,7 +837,11 @@ public class FeatureAdapter extends TypeAdapter {
 			if (FeatureUtil.getValuationFor(target).isInitial()) {
 				Feature that = (Feature)getLibraryType("Base::things::that");
 				Feature startShot = (Feature)getLibraryType("Occurrences::Occurrence::startShot");
-				featuringTypes = Collections.singletonList(FeatureUtil.chainFeatures(that, startShot));
+				if (that != null && startShot != null) {
+					featuringTypes = Collections.singletonList(FeatureUtil.chainFeatures(that, startShot));
+				} else {
+					featuringTypes = target.getFeaturingType();
+				}
 			} else {
 				featuringTypes = target.getFeaturingType();
 			}
@@ -877,7 +895,7 @@ public class FeatureAdapter extends TypeAdapter {
 					
 					addFeaturingType(cartesianProductFeature);
 
-					for (Feature redefinedFeature: FeatureUtil.getRedefinedFeaturesWithComputedOf(owningFeature, null)) {
+					for (Feature redefinedFeature: FeatureUtil.getRedefinedFeaturesWithComputedOf(owningFeature)) {
 						if (redefinedFeature.isEnd()) {
 							Feature crossFeature = getCrossFeatureOf(redefinedFeature);
 							if (crossFeature != null) {

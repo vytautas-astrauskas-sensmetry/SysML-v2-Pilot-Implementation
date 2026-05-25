@@ -3,19 +3,18 @@
  * Copyright (c) 2021-2025 Model Driven Solutions, Inc.
  *    
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the Eclipse Public License as published by
+ * the Eclipse Foundation, version 2 of the License.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Eclipse Public License for more details.
  *  
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the Eclipse Public License
+ * along with this program.  If not, see <https://www.eclipse.org/legal/epl-2.0/>.
  *  
- * @license LGPL-3.0-or-later <http://spdx.org/licenses/LGPL-3.0-or-later>
+ * @license EPL-2.0 <http://spdx.org/licenses/EPL-2.0>
  *  
  *******************************************************************************/
 
@@ -59,6 +58,7 @@ public class ImplicitGeneralizationMap {
 		
 		//checkBindingConnectorSpecialization
 		put(BindingConnectorImpl.class, "binary", "Links::selfLinks");
+		put(BindingConnectorImpl.class, "binaryObject", "Links::selfLinks");
 		
 		//checkBooleanExpressionSpecialization
 		put(BooleanExpressionImpl.class, "base", "Performances::booleanEvaluations");
@@ -202,6 +202,7 @@ public class ImplicitGeneralizationMap {
 		
 		//checkSuccessionSpecialization
 		put(SuccessionImpl.class, "binary", "Occurrences::happensBeforeLinks");
+		put(SuccessionImpl.class, "binaryObject", "Occurrences::happensBeforeLinks");
 		
 		//checkSuccessionSpecialization
 		put(SuccessionFlowImpl.class, "base", "Transfers::flowTransfersBefore");
@@ -285,6 +286,7 @@ public class ImplicitGeneralizationMap {
 		put(BindingConnectorAsUsageImpl.class, "base", "Links::selfLinks");
 		//checkBindingConnectorSpecialization
 		put(BindingConnectorAsUsageImpl.class, "binary", "Links::selfLinks");
+		put(BindingConnectorAsUsageImpl.class, "binaryObject", "Links::selfLinks");
 		
 		//checkCalculationDefinitionSpecialization
 		put(CalculationDefinitionImpl.class, "base", "Calculations::Calculation");
@@ -511,6 +513,7 @@ public class ImplicitGeneralizationMap {
 		put(SuccessionAsUsageImpl.class, "base", "Occurrences::happensBeforeLinks");
 		//checkSuccessionSpecialization
 		put(SuccessionAsUsageImpl.class, "binary", "Occurrences::happensBeforeLinks");
+		put(SuccessionAsUsageImpl.class, "binaryObject", "Occurrences::happensBeforeLinks");
 		//checkDecisionNodeOutgoingSuccessionSpecialization
 		put(SuccessionAsUsageImpl.class, "decision", "ControlPerformances::DecisionPerformance::outgoingHBLink");
 		//checkMergeNodeIncomingSuccessionSpecialization

@@ -1,22 +1,21 @@
 /*****************************************************************************
  * SysML 2 Pilot Implementation
- * Copyright (c) 2020-2021, 2024 Model Driven Solutions, Inc.
+ * Copyright (c) 2020-2021, 2024, 2026 Model Driven Solutions, Inc.
  * Copyright (c) 2024 Budapest University of Technology and Economics
  *    
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the Eclipse Public License as published by
+ * the Eclipse Foundation, version 2 of the License.
  * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Eclipse Public License for more details.
  * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the Eclipse Public License
+ * along with this program.  If not, see <https://www.eclipse.org/legal/epl-2.0/>.
  * 
- * @license LGPL-3.0-or-later <http://spdx.org/licenses/LGPL-3.0-or-later>
+ * @license EPL-2.0 <http://spdx.org/licenses/EPL-2.0>
  * 
  * Contributors:
  *  Zoltan Ujhelyi, MDS
@@ -48,14 +47,6 @@ public class KerMLLinker extends LazyLinker {
 	private OnChangeEvictingCache cache;
 	
 	@Override
-	protected void clearReferences(EObject obj) {
-		super.clearReferences(obj);
-		if (obj instanceof Element) {
-			ElementUtil.clean((Element)obj);
-		}
-	}
-	
-	@Override
 	protected void clearReference(EObject obj, EReference ref) {
 		if (
 			// The Relationship#source and #target features are overridden
@@ -72,10 +63,10 @@ public class KerMLLinker extends LazyLinker {
 	@Override
 	protected void doLinkModel(EObject model, IDiagnosticConsumer consumer) {
 		super.doLinkModel(model, consumer);
-		postProcessAllCrossReferences(model);
+		postProcessAll(model);
 	}
 	
-	protected void postProcessAllCrossReferences(EObject model) {
+	protected void postProcessAll(EObject model) {
 		cache.execWithoutCacheClear(model.eResource(), new IUnitOfWork.Void<Resource>() {
 			@Override
 			public void process(Resource state) throws Exception {

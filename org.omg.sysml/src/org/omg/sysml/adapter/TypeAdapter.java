@@ -1,21 +1,20 @@
 /*******************************************************************************
  * SysML 2 Pilot Implementation
- * Copyright (c) 2021-2025 Model Driven Solutions, Inc.
+ * Copyright (c) 2021-2026 Model Driven Solutions, Inc.
  *    
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the Eclipse Public License as published by
+ * the Eclipse Foundation, version 2 of the License.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Eclipse Public License for more details.
  *  
- * You should have received a copy of theGNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of theEclipse Public License
+ * along with this program.  If not, see <https://www.eclipse.org/legal/epl-2.0/>.
  *  
- * @license LGPL-3.0-or-later <http://spdx.org/licenses/LGPL-3.0-or-later>
+ * @license EPL-2.0 <http://spdx.org/licenses/EPL-2.0>
  *  
  *******************************************************************************/
 
@@ -41,12 +40,12 @@ import org.eclipse.emf.ecore.InternalEObject;
 import org.omg.sysml.lang.sysml.MetadataFeature;
 import org.omg.sysml.lang.sysml.Namespace;
 import org.omg.sysml.lang.sysml.Redefinition;
-import org.omg.sysml.expressions.util.EvaluationUtil;
 import org.omg.sysml.lang.sysml.BindingConnector;
 import org.omg.sysml.lang.sysml.Conjugation;
 import org.omg.sysml.lang.sysml.Element;
 import org.omg.sysml.lang.sysml.Expression;
 import org.omg.sysml.lang.sysml.Feature;
+import org.omg.sysml.lang.sysml.FeatureMembership;
 import org.omg.sysml.lang.sysml.Specialization;
 import org.omg.sysml.lang.sysml.Membership;
 import org.omg.sysml.lang.sysml.ResultExpressionMembership;
@@ -56,6 +55,7 @@ import org.omg.sysml.lang.sysml.VisibilityKind;
 import org.omg.sysml.lang.sysml.util.SysMLLibraryUtil;
 import org.omg.sysml.util.ConnectorUtil;
 import org.omg.sysml.util.ElementUtil;
+import org.omg.sysml.util.EvaluationUtil;
 import org.omg.sysml.util.FeatureUtil;
 import org.omg.sysml.util.ImplicitGeneralizationMap;
 import org.omg.sysml.util.NonNotifyingEObjectEList;
@@ -202,18 +202,38 @@ public class TypeAdapter extends NamespaceAdapter {
 		}
 		return redefinedFeatures;		
 	}
+	
+	public EList<FeatureMembership> getFeatureMembership() {
+		if (featureMembership == null) {
+			Type target = getTarget();
+			EList<FeatureMembership> featureMemberships = new NonNotifyingEObjectEList<FeatureMembership>(FeatureMembership.class, (InternalEObject) target, SysMLPackage.TYPE__FEATURE_MEMBERSHIP);
+			featureMemberships.addAll(target.getOwnedFeatureMembership());
+			// For improved performance, compute supertypes only once.
+			List<Type> allSupertypes = target.allSupertypes();
+			for (Membership membership: target.getInheritedMembership()) {
+				if (membership instanceof FeatureMembership && 
+						allSupertypes.contains(membership.getMembershipOwningNamespace())) {
+					featureMemberships.add((FeatureMembership)membership);
+				}
+			}
+			featureMembership = featureMemberships;
+		}
+		return featureMembership;
+	}
 
 	// Caching
 	
 	private EList<Membership> inheritedMembership = null;
 	private EList<Membership> nonPrivateMembership = null;
-	private Collection<Feature> redefinedFeatures = null;	
+	private Collection<Feature> redefinedFeatures = null;
+	private EList<FeatureMembership> featureMembership = null;
 	
 	public void clearCaches() {
 		super.clearCaches();
 		inheritedMembership = null;
 		nonPrivateMembership = null;
 		redefinedFeatures = null;
+		featureMembership = null;
 	}
 	
 	// Implicit Elements
@@ -359,15 +379,17 @@ public class TypeAdapter extends NamespaceAdapter {
 		implicitGeneralTypes.values().forEach(implicitGenerals::addAll);
 		for (Object eClass: implicitGeneralTypes.keySet().toArray()) {
 			List<Type> implicitEClassGenerals = implicitGeneralTypes.get(eClass);
-			if (eClass == SysMLPackage.eINSTANCE.getRedefinition()) {
-				implicitEClassGenerals.removeAll(redefinedFeatures);
-			} else {
-				implicitEClassGenerals.removeIf(gen->
-					generals.stream().anyMatch(type->specializesExcludingTarget(type, gen)) ||
-					implicitGenerals.stream().anyMatch(type->type != gen && specializesExcludingTarget(type, gen)));
-			}
-			if (implicitEClassGenerals.isEmpty()) {
-				implicitGeneralTypes.remove(eClass);
+			if (implicitEClassGenerals != null) {
+				if (eClass == SysMLPackage.eINSTANCE.getRedefinition()) {
+					implicitEClassGenerals.removeAll(redefinedFeatures);
+				} else {
+					implicitEClassGenerals.removeIf(gen->
+						generals.stream().anyMatch(type->specializesExcludingTarget(type, gen)) ||
+						implicitGenerals.stream().anyMatch(type->type != gen && specializesExcludingTarget(type, gen)));
+				}
+				if (implicitEClassGenerals.isEmpty()) {
+					implicitGeneralTypes.remove(eClass);
+				}
 			}
 		}
 		
@@ -436,23 +458,25 @@ public class TypeAdapter extends NamespaceAdapter {
 	protected List<Type> getBaseTypes() {
 		List<Type> baseTypes = new ArrayList<>();
 		if (isGetBaseTypes) {
-			isGetBaseTypes = false;
 			Type target = getTarget();
 			for (MetadataFeature metadataFeature : ElementUtil.getAllMetadataFeaturesOf(target)) {
+				// Resolve metaclass proxy before getting base type, to avoid problems
+				// with name resolution when applying semantic metadata.
+				metadataFeature.getMetaclass();
+				isGetBaseTypes = false;
 				metadataFeature.getFeature().stream().
 						filter(f->TypeUtil.specializes(f, getBaseTypeFeature(metadataFeature))).
 						map(FeatureUtil::getValueExpressionFor).
 						filter(expr->expr != null).
-						map(expr->
-						expr.evaluate(metadataFeature)).
+						map(expr->expr.evaluate(metadataFeature)).
 						filter(results->results != null && !results.isEmpty()).
 						map(results->results.get(0)).
 						map(EvaluationUtil::getMetaclassReferenceOf).
 						filter(Type.class::isInstance).
 						map(Type.class::cast).
 						forEachOrdered(baseTypes::add);
+				isGetBaseTypes = true;
 			}
-			isGetBaseTypes = true;
 		}
 		return baseTypes;
 	}

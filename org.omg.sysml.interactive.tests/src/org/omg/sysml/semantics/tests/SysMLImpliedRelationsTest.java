@@ -1,21 +1,20 @@
 /**
  * SysML 2 Pilot Implementation
- * Copyright (C) 2024, 2025 Model Driven Solutions, Inc.
+ * Copyright (C) 2024-2026 Model Driven Solutions, Inc.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the Eclipse Public License as published by
+ * the Eclipse Foundation, version 2 of the License.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Eclipse Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the Eclipse Public License
+ * along with this program.  If not, see <https://www.eclipse.org/legal/epl-2.0/>.
  *
- * @license LGPL-3.0-or-later <http://spdx.org/licenses/LGPL-3.0-or-later>
+ * @license EPL-2.0 <http://spdx.org/licenses/EPL-2.0>
  * 
  * Contributors:
  *   Laszlo Gati, MDS
@@ -27,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.omg.sysml.lang.sysml.FeatureDirectionKind;
-import org.omg.sysml.lang.sysml.ParameterMembership;
 import org.omg.sysml.lang.sysml.StateSubactionKind;
 import org.omg.sysml.lang.sysml.SysMLFactory;
 import org.omg.sysml.util.ElementUtil;
@@ -104,10 +102,7 @@ public class SysMLImpliedRelationsTest extends SysMLSemanticTest {
 		
 		var targetParam = SysMLFactory.eINSTANCE.createFeature();
 		targetParam.setDirection(FeatureDirectionKind.IN);
-		
-		ParameterMembership parameterMembership = SysMLFactory.eINSTANCE.createParameterMembership();
-		assignment.getOwnedRelationship().add(parameterMembership);
-		parameterMembership.setOwnedMemberParameter(targetParam);
+		TypeUtil.addOwnedFeatureTo(assignment, targetParam);
 		
 		var firstOfTarget = SysMLFactory.eINSTANCE.createFeature();
 		TypeUtil.addOwnedFeatureTo(targetParam, firstOfTarget);
@@ -136,10 +131,7 @@ public class SysMLImpliedRelationsTest extends SysMLSemanticTest {
 		
 		var targetParam = SysMLFactory.eINSTANCE.createFeature();
 		targetParam.setDirection(FeatureDirectionKind.IN);
-		
-		ParameterMembership parameterMembership = SysMLFactory.eINSTANCE.createParameterMembership();
-		assignment.getOwnedRelationship().add(parameterMembership);
-		parameterMembership.setOwnedMemberParameter(targetParam);
+		TypeUtil.addOwnedFeatureTo(assignment, targetParam);
 		
 		var firstOfTarget = SysMLFactory.eINSTANCE.createFeature();
 		TypeUtil.addOwnedFeatureTo(targetParam, firstOfTarget);
@@ -163,10 +155,7 @@ public class SysMLImpliedRelationsTest extends SysMLSemanticTest {
 		
 		var targetParam = SysMLFactory.eINSTANCE.createFeature();
 		targetParam.setDirection(FeatureDirectionKind.IN);
-		
-		ParameterMembership parameterMembership = SysMLFactory.eINSTANCE.createParameterMembership();
-		assignment.getOwnedRelationship().add(parameterMembership);
-		parameterMembership.setOwnedMemberParameter(targetParam);
+		TypeUtil.addOwnedFeatureTo(assignment, targetParam);
 		
 		var firstOfTarget = SysMLFactory.eINSTANCE.createFeature();
 		TypeUtil.addOwnedFeatureTo(targetParam, firstOfTarget);

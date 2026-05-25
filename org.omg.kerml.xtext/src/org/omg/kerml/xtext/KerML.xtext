@@ -6,19 +6,18 @@
  * Copyright (c) 2019 Mgnite Inc.
  *    
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the Eclipse Public License as published by
+ * the Eclipse Foundation, version 2 of the License.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Eclipse Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the Eclipse Public License
+ * along with this program.  If not, see <https://www.eclipse.org/legal/epl-2.0/>.
  *
- * @license LGPL-3.0-or-later <http://spdx.org/licenses/LGPL-3.0-or-later>
+ * @license EPL-2.0 <http://spdx.org/licenses/EPL-2.0>
  * 
  * Contributors:
  *  Ed Seidewitz, MDS
@@ -509,6 +508,10 @@ enum FeatureDirection returns SysML::FeatureDirectionKind:
 	in = 'in' | out = 'out' | inout = 'inout'
 ;
 
+fragment EndFeaturePrefix returns SysML::Feature :
+    ( isConstant ?= 'const')? isEnd ?= 'end'
+;
+
 fragment BasicFeaturePrefix returns SysML::Feature :	
 	( direction = FeatureDirection )?
 	( isDerived ?= 'derived' )?
@@ -518,7 +521,7 @@ fragment BasicFeaturePrefix returns SysML::Feature :
 ;
 
 fragment FeaturePrefix returns SysML::Feature :
-	( isEnd ?= 'end' ( ownedRelationship += OwnedCrossingFeatureMember )?
+	( EndFeaturePrefix ( ownedRelationship += OwnedCrossingFeatureMember )?
 	| BasicFeaturePrefix
 	)
 	( ownedRelationship += PrefixMetadataMember )*
@@ -536,7 +539,7 @@ Feature returns SysML::Feature :
 	( FeaturePrefix
 	  ( 'feature' | ownedRelationship += PrefixMetadataMember ) 
 	  FeatureDeclaration?
-	| ( isEnd ?= 'end' | BasicFeaturePrefix )
+	| ( EndFeaturePrefix | BasicFeaturePrefix )
 	  FeatureDeclaration
 	)
 	ValuePart? TypeBody
@@ -576,9 +579,14 @@ fragment FeatureSpecializationPart returns SysML::Feature :
 fragment MultiplicityPart returns SysML::Feature :
 	  ownedRelationship += OwnedMultiplicity 
 	| ( ownedRelationship += OwnedMultiplicity )?
-	  ( isOrdered ?= 'ordered' isNonunique ?= 'nonunique'?
-	  | isNonunique ?= 'nonunique' isOrdered ?= 'ordered'?
+	  ( isOrdered ?= 'ordered' ( isUnique = Nonunique )?
+	  | isUnique = Nonunique ( isOrdered ?= 'ordered' )?
 	  )
+;
+
+Nonunique returns Ecore::EBoolean :
+	// Note: A value converter converts the value of this keyword to "false".
+	'nonunique'
 ;
 
 fragment FeatureSpecialization returns SysML::Feature :

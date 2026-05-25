@@ -22,6 +22,12 @@ target
 .polyglot.META-INF
 dependency-reduced-pom.xml
 
+#Maven
+.mvn/repository
+.mvn/maven.config
+.m2/
+.polyglot.feature.xml
+
 # VS Code settings
 .vscode/
 
@@ -35,5 +41,11 @@ dependency-reduced-pom.xml
 # MacOS Finder
 .DS_Store
 
+# Generated Python files
+*.pyc
+
 # Built libraries
 *.kpar
+
+# Sysand JAR
+org.omg.sysml.xtext/lib/sysand.jar

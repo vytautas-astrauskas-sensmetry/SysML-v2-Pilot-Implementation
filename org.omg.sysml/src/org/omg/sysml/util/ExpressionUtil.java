@@ -1,21 +1,20 @@
 /*******************************************************************************
  * SysML 2 Pilot Implementation
- * Copyright (c) 2021-2023, 2025 Model Driven Solutions, Inc.
+ * Copyright (c) 2021-2023, 2025-2026 Model Driven Solutions, Inc.
  *    
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the Eclipse Public License as published by
+ * the Eclipse Foundation, version 2 of the License.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Eclipse Public License for more details.
  *  
- * You should have received a copy of theGNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of theEclipse Public License
+ * along with this program.  If not, see <https://www.eclipse.org/legal/epl-2.0/>.
  *  
- * @license LGPL-3.0-or-later <http://spdx.org/licenses/LGPL-3.0-or-later>
+ * @license EPL-2.0 <http://spdx.org/licenses/EPL-2.0>
  *  
  *******************************************************************************/
 
@@ -28,6 +27,7 @@ import java.util.stream.Stream;
 import org.eclipse.emf.common.util.EList;
 import org.omg.sysml.adapter.ExpressionAdapter;
 import org.omg.sysml.adapter.FeatureReferenceExpressionAdapter;
+import org.omg.sysml.adapter.InvocationExpressionAdapter;
 import org.omg.sysml.lang.sysml.ConstructorExpression;
 import org.omg.sysml.lang.sysml.DataType;
 import org.omg.sysml.lang.sysml.Element;
@@ -51,12 +51,17 @@ public class ExpressionUtil {
 	private ExpressionUtil() {
 	}
 	
+	public static final String COLLECTION_DATA_TYPE = "Collections::Collection";
 	public static final String ORDERED_COLLECTION_DATA_TYPE = "Collections::OrderedCollection";
 	public static final String ARRAY_DATA_TYPE = "Collections::Array";
 
 	public static final String SELF_REFERENCE_FEATURE = "Base::Anything::self";
 	public static final String COLLECTION_ELEMENTS_FEATURE = "Collections::Collection::elements";
 	public static final String ARRAY_DIMENSIONS_FEATURE = "Collections::Array::dimensions";
+	
+	public static DataType getCollectionDataType(Element context) {
+		return (DataType)SysMLLibraryUtil.getLibraryType(context, COLLECTION_DATA_TYPE);
+	}
 	
 	public static DataType getOrderedCollectionDataType(Element context) {
 		return (DataType)SysMLLibraryUtil.getLibraryType(context, ORDERED_COLLECTION_DATA_TYPE);
@@ -181,6 +186,10 @@ public class ExpressionUtil {
 	public static boolean isConstructorResult(Type type) {
 		return type instanceof Feature && ((Feature)type).getOwningType() instanceof ConstructorExpression &&
 				((Feature)type).getOwningFeatureMembership() instanceof ReturnParameterMembership;
+	}
+	
+	public static EList<Expression> getOperandsOf(InvocationExpression expression) {
+		return ((InvocationExpressionAdapter)getExpressionAdapter(expression)).getOperand();
 	}
 	
 }

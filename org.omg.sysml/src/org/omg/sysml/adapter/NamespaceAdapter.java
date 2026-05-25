@@ -1,27 +1,27 @@
 /*******************************************************************************
  * SysML 2 Pilot Implementation
- * Copyright (c) 2021, 2024, 2025 Model Driven Solutions, Inc.
+ * Copyright (c) 2021, 2024, 2025, 2026 Model Driven Solutions, Inc.
  *    
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the Eclipse Public License as published by
+ * the Eclipse Foundation, version 2 of the License.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Eclipse Public License for more details.
  *  
- * You should have received a copy of theGNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of theEclipse Public License
+ * along with this program.  If not, see <https://www.eclipse.org/legal/epl-2.0/>.
  *  
- * @license LGPL-3.0-or-later <http://spdx.org/licenses/LGPL-3.0-or-later>
+ * @license EPL-2.0 <http://spdx.org/licenses/EPL-2.0>
  *  
  *******************************************************************************/
 
 package org.omg.sysml.adapter;
 
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.util.BasicEList;
@@ -34,6 +34,7 @@ import org.omg.sysml.lang.sysml.Membership;
 import org.omg.sysml.lang.sysml.Namespace;
 import org.omg.sysml.lang.sysml.SysMLPackage;
 import org.omg.sysml.lang.sysml.VisibilityKind;
+import org.omg.sysml.util.ElementUtil;
 import org.omg.sysml.util.NamespaceUtil;
 import org.omg.sysml.util.NonNotifyingEObjectEList;
 
@@ -48,6 +49,31 @@ public class NamespaceAdapter extends ElementAdapter {
 	}
 	
 	// Additional operations
+	
+	/**
+	 * If the Namespace is the root Namespace of a standard library package, then give it a stable elementId.
+	 */
+	@Override
+	protected String createElementId() {
+		Namespace target = getTarget();
+		
+		if (target.getOwningRelationship() == null) {
+			EList<Element> ownedMembers = target.getOwnedMember();
+			if (!ownedMembers.isEmpty()) {
+				Element firstOwnedMember = ownedMembers.get(0);
+				if (ElementUtil.isStandardLibraryElement(firstOwnedMember) && 
+						firstOwnedMember.libraryNamespace() == firstOwnedMember) {
+					String qualifiedName = firstOwnedMember.getQualifiedName();
+					if (qualifiedName != null) {
+						UUID namespaceUUID = UUID.fromString(firstOwnedMember.getElementId());
+						return ElementUtil.constructNameUUID(namespaceUUID, qualifiedName + "/owner").toString();
+					}
+				}
+			}
+		}
+		
+		return super.createElementId();
+	}
 	
 	public EList<Membership> getMembershipsOfVisibility(VisibilityKind visibility, Set<Namespace> excluded) {
 		Namespace target = getTarget();
@@ -127,6 +153,7 @@ public class NamespaceAdapter extends ElementAdapter {
 	
 	@Override
 	public void clearCaches() {
+		super.clearCaches();
 		importedMembership = null;
 	}
 	

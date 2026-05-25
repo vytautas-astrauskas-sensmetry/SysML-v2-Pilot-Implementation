@@ -1,21 +1,20 @@
 /*******************************************************************************
  * SysML 2 Pilot Implementation
- * Copyright (c) 2021-2022, 2024-2025 Model Driven Solutions, Inc.
+ * Copyright (c) 2021-2022, 2024-2026 Model Driven Solutions, Inc.
  *    
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the Eclipse Public License as published by
+ * the Eclipse Foundation, version 2 of the License.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Eclipse Public License for more details.
  *  
- * You should have received a copy of theGNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of theEclipse Public License
+ * along with this program.  If not, see <https://www.eclipse.org/legal/epl-2.0/>.
  *  
- * @license LGPL-3.0-or-later <http://spdx.org/licenses/LGPL-3.0-or-later>
+ * @license EPL-2.0 <http://spdx.org/licenses/EPL-2.0>
  *  
  *******************************************************************************/
 
@@ -41,6 +40,7 @@ import org.omg.sysml.lang.sysml.Element;
 import org.omg.sysml.lang.sysml.Expression;
 import org.omg.sysml.lang.sysml.Feature;
 import org.omg.sysml.lang.sysml.FeatureChaining;
+import org.omg.sysml.lang.sysml.FeatureDirectionKind;
 import org.omg.sysml.lang.sysml.FeatureMembership;
 import org.omg.sysml.lang.sysml.Specialization;
 import org.omg.sysml.lang.sysml.Membership;
@@ -97,10 +97,15 @@ public class TypeUtil {
 				collect(Collectors.toSet());
 	}
 	
-	public static List<Feature> getFeaturesRedefinedBy(Type type, Element skip) {
+	public static List<Feature> getFeaturesRedefinedBy(Type type, Feature skip) {
 		return type.getOwnedFeature().stream().
-				flatMap(feature->FeatureUtil.getRedefinedFeaturesWithComputedOf(feature, skip).stream()).
+				filter(feature->feature != skip).
+				flatMap(feature->FeatureUtil.getRedefinedFeaturesWithComputedOf(feature).stream()).
 				toList();
+	}
+	
+	public static EList<FeatureMembership> getFeatureMembershipOf(Type type) {
+		return getTypeAdapter(type).getFeatureMembership();
 	}
 
 	// Supertypes
@@ -264,6 +269,7 @@ public class TypeUtil {
 			ReturnParameterMembership membership = SysMLFactory.eINSTANCE.createReturnParameterMembership();
 			membership.setOwnedMemberParameter(resultParameter);
 			type.getOwnedRelationship().add(membership);
+			resultParameter.setDirection(FeatureDirectionKind.OUT);
 		}
 	}
 	
@@ -363,7 +369,9 @@ public class TypeUtil {
 	}
 	
 	public static ParameterMembership addOwnedParameterTo(Type type, Expression value) {
-		return addBoundFeatureTo(type, value, SysMLFactory.eINSTANCE.createParameterMembership());
+		ParameterMembership membership = addBoundFeatureTo(type, value, SysMLFactory.eINSTANCE.createParameterMembership());
+		membership.getOwnedMemberParameter().setDirection(FeatureDirectionKind.IN);
+		return membership;
 	}
 	
 	// Implicit general types

@@ -5,19 +5,19 @@
  * Copyright (c) 2018, 2019 California Institute of Technology/Jet Propulsion Laboratory
  *    
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * it under the terms of the Eclipse Public License as published by
+ * the Eclipse Foundation, version 2 of the License.
  * (at your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Eclipse Public License for more details.
  * 
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the Eclipse Public License
+ * along with this program.  If not, see <https://www.eclipse.org/legal/epl-2.0/>.
  * 
- * @license LGPL-3.0-or-later <http://spdx.org/licenses/LGPL-3.0-or-later>
+ * @license EPL-2.0 <http://spdx.org/licenses/EPL-2.0>
  * 
  * Contributors:
  *  Zoltan Kiss, IncQuery
@@ -50,6 +50,7 @@ import org.omg.sysml.lang.sysml.Subsetting
 import org.omg.sysml.util.NamespaceUtil
 import org.omg.sysml.lang.sysml.FeatureTyping
 import org.omg.kerml.xtext.library.LibraryNamespaces
+import org.omg.sysml.lang.sysml.Redefinition
 
 class KerMLScopeProvider extends AbstractKerMLScopeProvider {
 
@@ -124,7 +125,7 @@ class KerMLScopeProvider extends AbstractKerMLScopeProvider {
 			    	featureChained = owningNamespace as Connector
 			    }
 			}
-			featureChained.scope_relativeNamespace(owningNamespace, ch, reference)
+			featureChained.scope_relativeNamespace(owningNamespace, owningRelationship, reference)
 		} else
 			ch.scope_Namespace(ownedFeatureChainings.get(i-1).chainingFeature, ch, reference, false)
 	}
@@ -142,7 +143,9 @@ class KerMLScopeProvider extends AbstractKerMLScopeProvider {
 			super.getScope(element, reference)		
 		else 
 			namespace.scopeFor(reference, element, isInsideScope, true,
-				reference == SysMLPackage.eINSTANCE.redefinition_RedefinedFeature, 
+			    context instanceof Redefinition &&
+				(reference == SysMLPackage.eINSTANCE.redefinition_RedefinedFeature ||
+				 reference == SysMLPackage.eINSTANCE.featureChaining_ChainingFeature), 
 				if (context instanceof Element) context else null)
 	}
 	

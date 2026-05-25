@@ -1,21 +1,20 @@
 /*******************************************************************************
  * SysML 2 Pilot Implementation
- * Copyright (c) 2021-2024 Model Driven Solutions, Inc.
+ * Copyright (c) 2021-2024, 2026 Model Driven Solutions, Inc.
  *    
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the Eclipse Public License as published by
+ * the Eclipse Foundation, version 2 of the License.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * Eclipse Public License for more details.
  *  
- * You should have received a copy of theGNU Lesser General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of theEclipse Public License
+ * along with this program.  If not, see <https://www.eclipse.org/legal/epl-2.0/>.
  *  
- * @license LGPL-3.0-or-later <http://spdx.org/licenses/LGPL-3.0-or-later>
+ * @license EPL-2.0 <http://spdx.org/licenses/EPL-2.0>
  *  
  *******************************************************************************/
 
@@ -168,6 +167,11 @@ public class ElementAdapterFactory {
 		}
 		
 		@Override
+		public ElementAdapter caseComment(Comment element) {
+			return new CommentAdapter(element);
+		}
+		
+		@Override
 		public ElementAdapter caseConcernUsage(ConcernUsage element) {
 			return new ConcernUsageAdapter(element);
 		}
@@ -240,6 +244,11 @@ public class ElementAdapterFactory {
 		@Override
 		public ElementAdapter caseElement(Element element) {
 			return new ElementAdapter(element);
+		}
+		
+		@Override
+		public ElementAdapter caseEndFeatureMembership(EndFeatureMembership element) {
+			return new EndFeatureMembershipAdapter(element);
 		}
 		
 		@Override
@@ -358,6 +367,16 @@ public class ElementAdapterFactory {
 		}
 		
 		@Override
+		public ElementAdapter caseLibraryPackage(LibraryPackage element) {
+			return new LibraryPackageAdapter(element);
+		}
+		
+		@Override
+		public ElementAdapter caseLiteralString(LiteralString element) {
+			return new LiteralStringAdapter(element);
+		}
+		
+		@Override
 		public ElementAdapter caseMembership(Membership element) {
 			return new MembershipAdapter(element);
 		}
@@ -423,8 +442,18 @@ public class ElementAdapterFactory {
 		}
 		
 		@Override
+		public ElementAdapter caseOwningMembership(OwningMembership element) {
+			return new OwningMembershipAdapter(element);
+		}
+		
+		@Override
 		public ElementAdapter casePackage(Package element) {
 			return new PackageAdapter(element);
+		}
+		
+		@Override
+		public ElementAdapter caseParameterMembership(ParameterMembership element) {
+			return new ParameterMembershipAdapter(element);
 		}
 		
 		@Override
@@ -565,6 +594,11 @@ public class ElementAdapterFactory {
 		@Override
 		public ElementAdapter caseTerminateActionUsage(TerminateActionUsage element) {
 			return new TerminateActionUsageAdapter(element);
+		}
+		
+		@Override
+		public ElementAdapter caseTextualRepresentation(TextualRepresentation element) {
+			return new TextualRepresentationAdapter(element);
 		}
 		
 		@Override
