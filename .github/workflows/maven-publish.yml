@@ -10,6 +10,15 @@ name: Publish Release Build
 
 on:
   workflow_dispatch:
+    inputs:
+      build_tag:
+        description: 'Build tag stamped onto version, versionConstraint, and resource URLs in .project.json (e.g. 2025-01)'
+        required: false
+        type: string
+      metamodel_tag:
+        description: 'Metamodel tag replacing the date segment of the metamodel URL in .meta.json (e.g. 2025-01)'
+        required: false
+        type: string
   release:
       types: [published]
 
@@ -31,6 +40,8 @@ jobs:
       run: ./mvnw -B deploy -DskipTests=true
       env:
         GITHUB_TOKEN: ${{ github.token }} # GITHUB_TOKEN is the default env for the password
+        BUILD_TAG: ${{ inputs.build_tag }}
+        METAMODEL_TAG: ${{ inputs.metamodel_tag }}
     - name: Upload SysML Library .kpar files
       uses: actions/upload-artifact@v5
       with:
